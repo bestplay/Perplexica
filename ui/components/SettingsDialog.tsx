@@ -6,7 +6,7 @@ import {
   Transition,
   TransitionChild,
 } from '@headlessui/react';
-import { CloudUpload, RefreshCcw, RefreshCw } from 'lucide-react';
+import { CloudUpload, RefreshCcw, RefreshCw, Settings } from 'lucide-react';
 import React, {
   Fragment,
   useEffect,
@@ -14,6 +14,7 @@ import React, {
   type SelectHTMLAttributes,
 } from 'react';
 import ThemeSwitcher from './theme/Switcher';
+import Link from 'next/link';
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
 
@@ -225,6 +226,12 @@ const SettingsDialog = ({
                 </DialogTitle>
                 {config && !isLoading && (
                   <div className="flex flex-col space-y-4 mt-6">
+
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-black/70 dark:text-white/70 text-sm">
+                        <Link href={'/settings/focus-modes'} onClick={()=>{setIsOpen(false)}}>Focus modes settings<Settings className='inline ml-1'></Settings></Link>
+                      </p>
+                    </div>
                     <div className="flex flex-col space-y-1">
                       <p className="text-black/70 dark:text-white/70 text-sm">
                         Theme

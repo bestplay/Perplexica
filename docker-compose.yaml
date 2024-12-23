@@ -8,6 +8,14 @@ services:
     networks:
       - perplexica-network
     restart: unless-stopped
+    
+  redis:
+    image: redis:latest
+    ports:
+      - 6379:6379
+    networks:
+      - perplexica-network
+    restart: unless-stopped
 
   perplexica-backend:
     build:
@@ -16,8 +24,11 @@ services:
     image: itzcrazykns1337/perplexica-backend:main
     environment:
       - SEARXNG_API_URL=http://searxng:8080
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
     depends_on:
       - searxng
+      - redis
     ports:
       - 3001:3001
     volumes:

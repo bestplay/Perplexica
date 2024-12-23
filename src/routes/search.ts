@@ -10,6 +10,7 @@ import {
 import { searchHandlers } from '../websocket/messageHandler';
 import { AIMessage, BaseMessage, HumanMessage } from '@langchain/core/messages';
 import { MetaSearchAgentType } from '../search/metaSearchAgent';
+import { getCachedResponse, setCachedResponse } from '../cache/cache';
 
 const router = express.Router();
 
@@ -44,6 +45,16 @@ router.post('/', async (req, res) => {
 
     body.history = body.history || [];
     body.optimizationMode = body.optimizationMode || 'balanced';
+
+    const cachekey = JSON.stringify(body);
+    let cachedResponse = await getCachedResponse(cachekey);
+    if(cachedResponse){
+      logger.info("Cache hit")
+      res.status(200).json(JSON.parse(cachedResponse));
+      return
+    }else{
+      logger.info("Cache miss")
+    }
 
     const history: BaseMessage[] = body.history.map((msg) => {
       if (msg[0] === 'human') {
@@ -144,6 +155,8 @@ router.post('/', async (req, res) => {
     });
 
     emitter.on('end', () => {
+      const val = JSON.stringify({ message, sources })
+      setCachedResponse(cachekey, val)
       res.status(200).json({ message, sources });
     });
 

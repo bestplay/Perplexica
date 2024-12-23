@@ -49,6 +49,9 @@ export const getGeminiApiKey = () => loadConfig().API_KEYS.GEMINI;
 export const getSearxngApiEndpoint = () =>
   process.env.SEARXNG_API_URL || loadConfig().API_ENDPOINTS.SEARXNG;
 
+export const getRedisUrl = () =>
+  `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`;
+
 export const getOllamaApiEndpoint = () => loadConfig().API_ENDPOINTS.OLLAMA;
 
 export const updateConfig = (config: RecursivePartial<Config>) => {
