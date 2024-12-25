@@ -1,5 +1,5 @@
 import { EventEmitter, WebSocket } from 'ws';
-import { BaseMessage, AIMessage, HumanMessage } from '@langchain/core/messages';
+import { BaseMessage, AIMessage, HumanMessage, BaseMessageChunk } from '@langchain/core/messages';
 import type { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import type { Embeddings } from '@langchain/core/embeddings';
 import logger from '../utils/logger';
@@ -12,6 +12,7 @@ import MetaSearchAgent, {
   MetaSearchAgentType,
 } from '../search/metaSearchAgent';
 import prompts from '../prompts';
+import { buildAnswerToPictureTool } from '../mcp/client/mcptools';
 
 type Message = {
   messageId: string;
@@ -189,6 +190,15 @@ export const handleMessage = async (
         searchHandlers[parsedWSMessage.focusMode];
 
       if (handler) {
+        let answer = ""
+        if(history.length>=2){
+          const answerMsg = history[history.length-2]
+          answer = answerMsg.content as string
+        }
+        let answer2picTool = buildAnswerToPictureTool(answer)
+        if(answer2picTool){
+          llm = llm.bindTools([answer2picTool]) as BaseChatModel
+        }
         try {
           const emitter = await handler.searchAndAnswer(
             parsedMessage.content,
@@ -197,6 +207,7 @@ export const handleMessage = async (
             embeddings,
             parsedWSMessage.optimizationMode,
             parsedWSMessage.files,
+            answer2picTool
           );
 
           handleEmitterEvents(emitter, ws, aiMessageId, parsedMessage.chatId);

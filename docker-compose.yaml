@@ -3,12 +3,12 @@ services:
     image: docker.io/searxng/searxng:latest
     volumes:
       - ./searxng:/etc/searxng:rw
+      - ./settings.yml:/usr/local/searxng/searx/settings.yml
     ports:
       - 4000:8080
     networks:
       - perplexica-network
     restart: unless-stopped
-    
   redis:
     image: redis:latest
     ports:
@@ -32,6 +32,7 @@ services:
     ports:
       - 3001:3001
     volumes:
+      - ./src:/home/perplexica/src
       - backend-dbstore:/home/perplexica/data
       - uploads:/home/perplexica/uploads
       - ./config.toml:/home/perplexica/config.toml
@@ -49,8 +50,8 @@ services:
         - NEXT_PUBLIC_API_URL=http://127.0.0.1:3001/api
         - NEXT_PUBLIC_WS_URL=ws://127.0.0.1:3001
     image: itzcrazykns1337/perplexica-frontend:main
-    depends_on:
-      - perplexica-backend
+    # depends_on:
+      # - perplexica-backend
     ports:
       - 3000:3000
     networks:

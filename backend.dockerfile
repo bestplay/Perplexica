@@ -13,5 +13,6 @@ RUN mkdir /home/perplexica/uploads
 
 RUN yarn install --frozen-lockfile --network-timeout 600000
 RUN yarn build
-
-CMD ["yarn", "start"]
+RUN apt update && apt install fontconfig -y
+# CMD ["yarn", "start"]
+CMD ["yarn", "dev"]

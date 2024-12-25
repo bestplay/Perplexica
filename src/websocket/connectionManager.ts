@@ -77,7 +77,6 @@ export const handleConnection = async (
       );
       ws.close();
     }
-
     const interval = setInterval(() => {
       if (ws.readyState === ws.OPEN) {
         ws.send(

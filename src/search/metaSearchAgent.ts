@@ -11,7 +11,7 @@ import {
   RunnableMap,
   RunnableSequence,
 } from '@langchain/core/runnables';
-import { BaseMessage } from '@langchain/core/messages';
+import { AIMessage, AIMessageChunk, BaseMessage, BaseMessageChunk, ChatMessage, ToolMessage } from '@langchain/core/messages';
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import LineListOutputParser from '../lib/outputParsers/listLineOutputParser';
 import LineOutputParser from '../lib/outputParsers/lineOutputParser';
@@ -25,6 +25,9 @@ import formatChatHistoryAsString from '../utils/formatHistory';
 import eventEmitter from 'events';
 import { StreamEvent } from '@langchain/core/tracers/log_stream';
 import { IterableReadableStream } from '@langchain/core/utils/stream';
+import { DynamicStructuredTool } from '@langchain/core/tools';
+import { BaseLanguageModelInput } from '@langchain/core/language_models/base';
+import { baseObjectInputType } from 'zod';
 
 export interface MetaSearchAgentType {
   searchAndAnswer: (
@@ -34,6 +37,7 @@ export interface MetaSearchAgentType {
     embeddings: Embeddings,
     optimizationMode: 'speed' | 'balanced' | 'quality',
     fileIds: string[],
+    genPicTool: DynamicStructuredTool,
   ) => Promise<eventEmitter>;
 }
 
@@ -235,6 +239,7 @@ class MetaSearchAgent implements MetaSearchAgentType {
     fileIds: string[],
     embeddings: Embeddings,
     optimizationMode: 'speed' | 'balanced' | 'quality',
+    genPicTool: DynamicStructuredTool,
   ) {
     return RunnableSequence.from([
       RunnableMap.from({
@@ -282,8 +287,23 @@ class MetaSearchAgent implements MetaSearchAgentType {
         new MessagesPlaceholder('chat_history'),
         ['user', '{query}'],
       ]),
-      llm,
-      this.strParser,
+      RunnableLambda.from(async (promptInput:any) => {
+        const input: AIMessageChunk = await llm.invoke(promptInput)
+        // generate-base64 width is 800 height is 200
+        if(input.tool_calls.length>0){
+          const toolCall = input.tool_calls[0]
+          if(toolCall.name === "generate-base64"){
+            const toolMsg = await genPicTool.invoke(toolCall.args)
+            let resultStr = `<img src="data:image/png;base64,${toolMsg}" alt="Base64 Image" />`
+            return await this.strParser.invoke(resultStr)
+          }
+        }
+        return await this.strParser.invoke(input)
+      }),
+
+      RunnableLambda.from(async (input:string) => {
+        return input
+      }),
     ]).withConfig({
       runName: 'FinalResponseGenerator',
     });
@@ -465,6 +485,7 @@ class MetaSearchAgent implements MetaSearchAgentType {
     embeddings: Embeddings,
     optimizationMode: 'speed' | 'balanced' | 'quality',
     fileIds: string[],
+    genPicTool: DynamicStructuredTool,
   ) {
     const emitter = new eventEmitter();
 
@@ -473,6 +494,7 @@ class MetaSearchAgent implements MetaSearchAgentType {
       fileIds,
       embeddings,
       optimizationMode,
+      genPicTool
     );
 
     const stream = answeringChain.streamEvents(

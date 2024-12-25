@@ -9,6 +9,7 @@ import searchRouter from './search';
 import discoverRouter from './discover';
 import uploadsRouter from './uploads';
 import focusmodeRouter from './focusmode';
+import text2picRouter from './text2pic';
 
 const router = express.Router();
 
@@ -22,5 +23,6 @@ router.use('/search', searchRouter);
 router.use('/discover', discoverRouter);
 router.use('/uploads', uploadsRouter);
 router.use('/focusmode', focusmodeRouter);
+router.use('/text2pic', text2picRouter);
 
 export default router;

@@ -140,6 +140,7 @@ router.post('/', async (req, res) => {
       embeddings,
       body.optimizationMode,
       [],
+      null,
     );
 
     let message = '';
